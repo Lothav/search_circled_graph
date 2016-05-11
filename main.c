@@ -14,55 +14,52 @@ typedef struct city_sy{
     Bridge * bridges;
     int count_br;
     int visited;
+    int come_from;
 }City;
 
-void push(int *stack,int item,int *top){
-    (*top)++;
-    stack[*top] = item;
-}
+void mark(City* cities, int ant[], int depth){
 
-void mark(City* cities, int *ant, int top, int city, int root){
+    int i, city;
 
-    int i;
+    city = ant[depth-1];
 
-    for(i = 0; i < cities[city].count_br; i++){
-        if(cities[city].bridges[i].to == ant[(top)]){
-            if(!cities[city].bridges[i].counted){
-                cities[city].bridges[i].counted = true;
+    while(true){
+        for(i = 0; i < cities[ant[depth-1]].count_br; i++){
+            if(cities[ant[depth-1]].bridges[i].to == ant[depth-2] && !cities[ant[depth-1]].bridges[i].counted ){
+                cities[ant[depth-1]].bridges[i].counted = true;
                 count++;
                 break;
             }
         }
-    }
 
-    for(i = 0; i < cities[ant[(top)]].count_br; i++){
-        if(cities[ant[(top)]].bridges[i].to == city){
-            if(!cities[ant[(top)]].bridges[i].counted){
-                cities[ant[(top)]].bridges[i].counted = true;
+        for(i = 0; i < cities[ant[depth-2]].count_br; i++){
+            if(cities[ant[depth-2]].bridges[i].to == ant[depth-1] && !cities[ant[depth-2]].bridges[i].counted){
+                cities[ant[depth-2]].bridges[i].counted = true;
                 break;
             }
         }
+        if(ant[depth-2] == city) break;
+        depth--;
     }
-
-    if(ant[top] != root) mark(cities,ant,top-1,ant[top], root);
-
 }
 
-void search(City* cities, int city, int depth, int* ant, int* top, int last){
+void search(City* cities, int city, int depth, int* ant){
 
-    int i;
-    if(cities[city].visited && depth > 3){
-        /// VISITADO
-        mark(cities, ant, *top, city,city);
+    int i, to;
+    int this_ant[depth];
 
+    for(i = 0; i < depth-1; i++) this_ant[i] = ant[i];
+    this_ant[depth-1] = city;
+
+    if(cities[city].visited){
+        mark(cities, this_ant, depth);
     }else{
-
-        push(ant,city,top);
-
         cities[city].visited = true;
         for(i = 0; i < cities[city].count_br; i++){
-            if(cities,cities[city].bridges[i].to != last){
-                search(cities,cities[city].bridges[i].to, depth+1, ant, top, city);
+            to = cities[city].bridges[i].to;
+            if(to != cities[city].come_from){
+                cities[to].come_from = city;
+                search(cities,cities[city].bridges[i].to, depth+1, this_ant);
             }
         }
     }
@@ -72,11 +69,9 @@ int main(){
 
     int x, y;
     int C, B;
-    int i, j;
-    char str[100];
-    int top = -1, *ant;
-
-
+    int i;
+    char str[10000];
+    int *ant;
 
     City *cities;
 
@@ -86,46 +81,29 @@ int main(){
         count = 0;
 
         cities = (City *) malloc(sizeof(City) * (C+1));
-        ant = (int *) malloc(sizeof(int)*4);
+        ant = (int *) malloc(sizeof(int)*B*20);
 
         for(i = 1; i <= C; i++){
             cities[i].bridges = (Bridge *) malloc(sizeof(Bridge) * (B+1));
             cities[i].count_br = 0;
+            cities[i].come_from = 0;
         }
 
         for(i = 0; i < B; i++){
             fgets(str, sizeof(str), stdin);
             sscanf(str," %d %d", &x, &y);
-
             cities[x].bridges[cities[x].count_br].to = y;
-            cities[y].bridges[cities[y].count_br].to = x;
-
             cities[x].bridges[cities[x].count_br].counted = false;
-            cities[y].bridges[cities[y].count_br].counted = false;
-
-            cities[y].count_br++;
             cities[x].count_br++;
+
+            cities[y].bridges[cities[y].count_br].to = x;
+            cities[y].bridges[cities[y].count_br].counted = false;
+            cities[y].count_br++;
         }
-        search(cities, 1, 1, ant, &top, 1);
+
+        search(cities, 1, 1, ant);
 
         printf("%d\n", B - count);
     }
-
     return (EXIT_SUCCESS);
 }
-/**
-
-
-8 9
-1 2
-1 5
-1 7
-7 3
-7 4
-3 4
-4 8
-4 6
-8 6
-
-
- */
