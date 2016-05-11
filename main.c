@@ -3,6 +3,7 @@
 
 #define true 1
 #define false 0
+#define MAX 12500
 
 int count = 0;
 
@@ -38,7 +39,7 @@ void mark(City* cities, int ant[], int depth){
                 break;
             }
         }
-        if(ant[depth-2] == city) break;
+        if(ant[depth-2] == city || !depth-2) break;
         depth--;
     }
 }
@@ -65,23 +66,39 @@ void search(City* cities, int city, int depth, int* ant){
     }
 }
 
+void bridgesConstructor(City * cities, int B){
+    int x,y,i;
+
+    char str[MAX];
+
+    for(i = 0; i < B; i++){
+        fgets(str, sizeof(str), stdin);
+        sscanf(str," %d %d", &x, &y);
+        cities[x].bridges[cities[x].count_br].to = y;
+        cities[x].bridges[cities[x].count_br].counted = false;
+        cities[x].count_br++;
+
+        cities[y].bridges[cities[y].count_br].to = x;
+        cities[y].bridges[cities[y].count_br].counted = false;
+        cities[y].count_br++;
+    }
+}
+
 int main(){
 
-    int x, y;
     int C, B;
     int i;
-    char str[10000];
+    char str[MAX];
     int *ant;
 
     City *cities;
 
-    while(!feof(stdin)){
-        fgets(str, sizeof(str), stdin);
+    while(fgets(str, sizeof(str), stdin)){
         sscanf(str," %d %d", &C, &B);
         count = 0;
 
         cities = (City *) malloc(sizeof(City) * (C+1));
-        ant = (int *) malloc(sizeof(int)*B*20);
+        ant = (int *) malloc(sizeof(int)*B*MAX);
 
         for(i = 1; i <= C; i++){
             cities[i].bridges = (Bridge *) malloc(sizeof(Bridge) * (B+1));
@@ -89,18 +106,7 @@ int main(){
             cities[i].come_from = 0;
         }
 
-        for(i = 0; i < B; i++){
-            fgets(str, sizeof(str), stdin);
-            sscanf(str," %d %d", &x, &y);
-            cities[x].bridges[cities[x].count_br].to = y;
-            cities[x].bridges[cities[x].count_br].counted = false;
-            cities[x].count_br++;
-
-            cities[y].bridges[cities[y].count_br].to = x;
-            cities[y].bridges[cities[y].count_br].counted = false;
-            cities[y].count_br++;
-        }
-
+        bridgesConstructor(cities, B);
         search(cities, 1, 1, ant);
 
         printf("%d\n", B - count);
