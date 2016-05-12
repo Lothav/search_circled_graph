@@ -39,7 +39,7 @@ void mark(City* cities, int ant[], int depth){
                 break;
             }
         }
-        if(ant[depth-2] == city || !depth-2) break;
+        if((depth-2)==0 || ant[depth-2] == city ) break;
         depth--;
     }
 }
