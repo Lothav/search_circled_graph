@@ -38,7 +38,7 @@ int minDistance(int dist[], bool sptSet[], int n) {
     return min_index;
 }
 
-void dijkstra(int **graph, int src, int n) {
+void dijkstra(int **graph, int n, int src, int to) {
     int dist[n];
 
     bool sptSet[n];
@@ -60,7 +60,7 @@ void dijkstra(int **graph, int src, int n) {
                 dist[v] = dist[u] + graph[u][v];
     }
 
-    for (int i = 0; i < n; i++) printf("%d \t\t %d\n", i, dist[i]);
+    printf("%d\n", dist[to]);
 }
 
 int getPos(int x, int y, int max_x, int max_y){
@@ -111,13 +111,15 @@ int main(int* argc, char* argv[]) {
 
     int size_x, size_y, size_adj_matrix;
     int **adj_matrix;
-    int i, j, a;
+    int i, j, a, from, to;
 
     FILE *map;
     City *cit;
 
     map = fopen(argv[1], "r");
     fscanf(map, "%d %d", &size_x, &size_y);
+
+    from = to = 0;
 
     a = 0;
     cit = (City *) malloc(sizeof(City) * size_x * size_y);
@@ -127,6 +129,8 @@ int main(int* argc, char* argv[]) {
             cit[a].y = i;
             cit[a].pos = (i == 0 && j == 0) || (j == size_x && i == size_y) ? 0 : getPos(j, i, size_x, size_y);
             fscanf( map, "%d", &cit[a].cost );
+            if(cit[a].x == atoi(argv[2]) && cit[a].y == atoi(argv[3])) from = a;
+            if(cit[a].x == atoi(argv[4]) && cit[a].y == atoi(argv[5])) to = a;
             a++;
         }
 
@@ -145,9 +149,7 @@ int main(int* argc, char* argv[]) {
             printf("%d     ",adj_matrix[i][j]);
             printf("\n");
     }
-
-    dijkstra(adj_matrix, 0, size_adj_matrix);
+    dijkstra(adj_matrix, size_adj_matrix, from, to);
 
     return 0;
 }
-
