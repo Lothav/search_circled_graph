@@ -71,36 +71,40 @@ int getPos(int x, int y, int max_x, int max_y){
 
 int getAdjMatCost(City *cit, int i, int j) {
 
-    int sum_cost = (cit[i].cost + cit[j].cost);
-    switch (cit[i].pos) {
-        case pos_corner_right_top:
-            return (cit[i].x == cit[j].x && cit[i].y - 1 == cit[j].y) ||
-                   (cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ?
-                   sum_cost : 0;
-        case pos_corner_left_bottom:
-            return (cit[i].x == cit[j].x && cit[i].y + 1 == cit[j].y) ||
-                   (cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ?
-                   sum_cost : 0;
+    int sum_cost;
+    if(cit[i].cost && cit[j].cost){
 
-        case pos_edge_left:
-            return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
-                    cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
-        case pos_edge_top:
-            return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                    cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
-        case pos_edge_right:
-            return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
-                    cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
-        case pos_edge_bottom:
-            return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                    cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+        sum_cost= (cit[i].cost + cit[j].cost);
+        switch (cit[i].pos) {
+            case pos_corner_right_top:
+                return (cit[i].x == cit[j].x && cit[i].y - 1 == cit[j].y) ||
+                       (cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ?
+                       sum_cost : 0;
+            case pos_corner_left_bottom:
+                return (cit[i].x == cit[j].x && cit[i].y + 1 == cit[j].y) ||
+                       (cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ?
+                       sum_cost : 0;
 
-        case pos_center:
-            return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                    (cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y))) ? sum_cost : 0;
-        default:
-            return 0;
-    }
+            case pos_edge_left:
+                return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
+                        cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
+            case pos_edge_top:
+                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
+                        cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+            case pos_edge_right:
+                return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
+                        cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
+            case pos_edge_bottom:
+                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
+                        cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+
+            case pos_center:
+                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
+                        (cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y))) ? sum_cost : 0;
+            default:
+                return 0;
+        }
+    }else return 0;
 }
 
 int main(int* argc, char* argv[]) {
@@ -117,11 +121,11 @@ int main(int* argc, char* argv[]) {
 
     a = 0;
     cit = (City *) malloc(sizeof(City) * size_x * size_y);
-    for(i = 0; i < size_x; i++)
-        for(j = 0; j < size_y; j++){
-            cit[a].x = i;
-            cit[a].y = j;
-            cit[a].pos = getPos(i, j, size_x, size_y);
+    for(i = 0; i < size_y; i++)
+        for(j = 0; j < size_x; j++){
+            cit[a].x = j;
+            cit[a].y = i;
+            cit[a].pos = (i == 0 && j == 0) || (j == size_x && i == size_y) ? 0 : getPos(j, i, size_x, size_y);
             fscanf( map, "%d", &cit[a].cost );
             a++;
         }
