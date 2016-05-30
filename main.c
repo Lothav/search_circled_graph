@@ -10,6 +10,12 @@
 #define true 1
 #define false 0
 
+typedef struct city_st{
+    int x;
+    int y;
+    int cost;
+} City;
+
 int minDistance(int dist[], bool sptSet[], int n) {
     int min = INT_MAX, min_index;
 
@@ -47,28 +53,51 @@ void dijkstra(int **graph, int src, int n) {
 
 int main(int* argc, char* argv[]) {
 
-    int size_x, size_y, **graph;
+    int size_x, size_y, size_adj_matrix;
+    int **adj_matrix, **graph;
     int i, j;
     FILE *map;
+    City **cities;
 
     map = fopen(argv[1], "r");
 
     fscanf(map, "%d %d", &size_x, &size_y);
 
     graph = (int **) malloc( sizeof(int *) * size_x );
-    for(i = 0; i <  size_x; i++){
+    for(i = 0; i <  size_x; i++)
         graph[i] = (int *) malloc( sizeof(int) * size_y );
-    }
 
-    graph[9][9] = 1;
 
-    for(i = 0; i < size_x; i++){
+    cities = (City**) malloc( sizeof(City*) * size_x );
+    for(i = 0; i <  size_x; i++)
+        cities[i] = (City*) malloc( sizeof(City) * size_y );
+
+
+    for(i = 0; i < size_x; i++)
         for(j = 0; j < size_y; j++){
-            fscanf(map, "%d", &graph[i][j]);
+            cities[i][j].x = i;
+            cities[i][j].y = j;
+            fscanf( map, "%d", &cities[i][j].cost );
         }
+
+    size_adj_matrix = size_x * size_y;
+    adj_matrix = (int **) malloc( sizeof(int *) * size_adj_matrix );
+    for(i = 0; i <  size_adj_matrix; i++)
+        adj_matrix[i] = (int *) malloc( sizeof(int) * size_adj_matrix );
+
+    for(i = 0; i < size_x; i++)
+        for(j = 0; j < size_x; j++)
+            adj_matrix[cities[i][j].x][cities[i][j].y] = adj_matrix[cities[i][j].y][cities[i][j].x] = graph[i][j];
+
+
+    for(i = 0; i < size_adj_matrix; i++) {
+        for(j = 0; j < size_adj_matrix; j++)
+            printf("%d/",adj_matrix[i][j]);
+            printf("\n");
     }
 
     dijkstra(graph, 0, size_x);
 
     return 0;
 }
+
