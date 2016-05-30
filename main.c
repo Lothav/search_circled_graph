@@ -69,38 +69,43 @@ int getPos(int x, int y, int max_x, int max_y){
            pos_center;
 }
 
-int getAdjMatCost(City *cit, int i, int j) {
+int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y) {
 
-    int sum_cost;
+    int sum_cost, offset_x, offset_y;
+
+    if(cit[i].cost == -1 && cit[j].cost == -1) return 1;
     if(cit[i].cost && cit[j].cost){
 
-        sum_cost= (cit[i].cost + cit[j].cost);
+        offset_x = rest_x ? rest_x : 1;
+        offset_y = rest_y ? rest_y : 1;
+        sum_cost = (cit[i].cost + cit[j].cost);
+
         switch (cit[i].pos) {
             case pos_corner_right_top:
-                return (cit[i].x == cit[j].x && cit[i].y - 1 == cit[j].y) ||
-                       (cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ?
+                return (cit[i].x == cit[j].x && cit[i].y - offset_y == cit[j].y) ||
+                       (cit[i].x - offset_x == cit[j].x && cit[i].y == cit[j].y) ?
                        sum_cost : 0;
             case pos_corner_left_bottom:
-                return (cit[i].x == cit[j].x && cit[i].y + 1 == cit[j].y) ||
-                       (cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ?
+                return (cit[i].x == cit[j].x && cit[i].y + offset_y == cit[j].y) ||
+                       (cit[i].x + offset_x == cit[j].x && cit[i].y == cit[j].y) ?
                        sum_cost : 0;
 
             case pos_edge_left:
-                return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
-                        cit[i].x + 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
+                return ((cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y)) ||
+                        cit[i].x + offset_x == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
             case pos_edge_top:
-                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                        cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
+                        cit[i].y + offset_y == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
             case pos_edge_right:
-                return ((cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y)) ||
-                        cit[i].x - 1 == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
+                return ((cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y)) ||
+                        cit[i].x - offset_x == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
             case pos_edge_bottom:
-                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                        cit[i].y + 1 == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
+                        cit[i].y + offset_y == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
 
             case pos_center:
-                return ((cit[i].y == cit[j].y && (cit[i].x + 1 == cit[j].x || cit[i].x - 1 == cit[j].x)) ||
-                        (cit[i].x == cit[j].x && (cit[i].y + 1 == cit[j].y || cit[i].y - 1 == cit[j].y))) ? sum_cost : 0;
+                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
+                        (cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y))) ? sum_cost : 0;
             default:
                 return 0;
         }
@@ -141,13 +146,13 @@ int main(int* argc, char* argv[]) {
 
     for(i = 0; i < size_adj_matrix; i++)
         for(j = 0; j < size_adj_matrix; j++){
-            adj_matrix[i][j] = adj_matrix[j][i] = i == j ? 0 : getAdjMatCost(cit, i, j);
+            adj_matrix[i][j] = adj_matrix[j][i] = i == j ? 0 : getAdjMatCost(cit, i, j, atoi(argv[7]), atoi(argv[6]));
         }
 
     for(i = 0; i < size_adj_matrix; i++) {
         for(j = 0; j < size_adj_matrix; j++)
-            printf("%d     ",adj_matrix[i][j]);
-            printf("\n");
+            printf("%d\t",adj_matrix[i][j]);
+        printf("\n");
     }
     dijkstra(adj_matrix, size_adj_matrix, from, to);
 
