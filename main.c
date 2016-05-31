@@ -72,7 +72,7 @@ int getPos(int x, int y, int max_x, int max_y){
 
 int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) {
 
-    int b, a, t, sig_x, sig_y, block_a, block_b, index;
+    int b, a, t, sig_x, sig_y, block_a, block_b, index, last_index;
     int cost_x, cost_y;
 
     if(cit[i].cost == -1 && cit[j].cost == -1) return 1;
@@ -96,14 +96,15 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
             if(cit[i].pos == pos_edge_top || cit[i].pos == pos_corner_left_top || cit[i].pos == pos_corner_right_top)
                 continue;
 
-        if(sig_y == 1 && cit[i].pos == pos_edge_bottom) continue;
-
         if( (i + (rest_x * sig_x) + (sig_y*offsetx*rest_y)) == j ){
 
-            cost_x  = block_a  = block_b = index = false;
+            cost_x = block_a = block_b = index = false;
+            last_index = sig_x + i;
+
             for(a = 1; a <= rest_x; a++){
 
                 index = sig_x*a + i;
+
                 if(cit[index].pos == pos_edge_left) block_a = true;
                 if(cit[index].pos == pos_edge_right) block_b = true;
 
@@ -112,10 +113,11 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                     break;
                 }
 
-                cost_x += cit[index].cost;
+                cost_x += (cit[index].cost + cit[last_index].cost);
+                last_index = index;
             }
-            block_a = false;
-            block_b = false;
+
+            block_a = block_b = false;
             if(cost_x){
                 for(b = 1; b <= rest_y; b++){
 
@@ -129,15 +131,17 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                         break;
                     }
 
-                    cost_x += cit[index].cost;
+                    cost_x += (cit[index].cost + cit[last_index].cost);
+                    last_index = index;
                 }
             }
 
             // cost y
             block_a = block_b = cost_y = index = false;
+            last_index = i + (sig_y*offsetx);
             for(a = 1; a <= rest_y; a++){
 
-                index = i+(sig_y*a*offsetx);
+                index = i + (sig_y*a*offsetx);
                 if(cit[index].pos == pos_edge_top) block_a = true;
                 if(cit[index].pos == pos_edge_bottom) block_b = true;
 
@@ -146,7 +150,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                     break;
                 }
 
-                cost_y += cit[index].cost;
+                cost_y += (cit[index].cost + cit[last_index].cost);
+                last_index = index;
             }
             block_a = false;
             block_b = false;
@@ -163,7 +168,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                         break;
                     }
 
-                    cost_y += cit[index].cost;
+                    cost_y += (cit[index].cost + cit[last_index].cost);
+                    last_index = index;
                 }
             }
             return !cost_x ? cost_y : !cost_y ? cost_x : (cost_x > cost_y) ? cost_y : cost_x;
@@ -184,9 +190,8 @@ int main(int* argc, char* argv[]) {
     map = fopen(argv[1], "r");
     fscanf(map, "%d %d", &size_x, &size_y);
 
-    from = to = 0;
+    from = to = a = 0;
 
-    a = 0;
     cit = (City *) malloc(sizeof(City) * size_x * size_y);
     for(i = 0; i < size_y; i++)
         for(j = 0; j < size_x; j++){
