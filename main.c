@@ -19,8 +19,10 @@
 
 #define pos_corner_right_top 6
 #define pos_corner_left_bottom 7
+#define pos_corner_left_top 8
+#define pos_corner_right_bottom 9
 
-typedef struct city_st{
+typedef struct {
     int pos;
     int x;
     int y;
@@ -57,59 +59,117 @@ void dijkstra(int **graph, int n, int src, int to) {
         for (int v = 0; v < n; v++)
             if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX
                 && dist[u]+graph[u][v] < dist[v])
-                dist[v] = dist[u] + graph[u][v];
+                dist[v] = dist[u] + (graph[u][v] > 1 ? graph[u][v] : 0);
     }
 
-    printf("%d\n", dist[to]);
+    printf("%d\n", dist[to] == INT_MAX ? -1 : dist[to]);
 }
 
 int getPos(int x, int y, int max_x, int max_y){
-    return ( x == 0 && y == max_y) ? pos_corner_left_bottom : (x == max_x && y == max_y) ? pos_corner_right_top :
-           (x == 0) ? pos_edge_left : (y == 0) ? pos_edge_top : (x == max_x) ? pos_edge_right : (y == max_y) ? pos_edge_bottom :
-           pos_center;
+    return ( x == 0 && y == max_y) ? pos_corner_left_bottom : (x == max_x && y == 0) ? pos_corner_right_top : (x == 0 && y == 0) ? pos_corner_left_top : (x == max_x && y == max_y) ? pos_corner_right_bottom :
+           (x == 0) ? pos_edge_left : (y == 0) ? pos_edge_top : (x == max_x) ? pos_edge_right : (y == max_y) ? pos_edge_bottom : pos_center;
 }
 
-int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y) {
+int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) {
 
-    int sum_cost, offset_x, offset_y;
+    int b, a, t, sig_x, sig_y, block_a, block_b, index;
+    int cost_x, cost_y;
 
     if(cit[i].cost == -1 && cit[j].cost == -1) return 1;
-    if(cit[i].cost && cit[j].cost){
+    if(!cit[i].cost || !cit[j].cost ) return 0;
+    for(t = 1; t <= 4; t++) {
 
-        offset_x = rest_x ? rest_x : 1;
-        offset_y = rest_y ? rest_y : 1;
-        sum_cost = (cit[i].cost + cit[j].cost);
+        sig_x = t > 2 ? -1 : 1;
+        sig_y = t % 2 == 0 ? -1 : 1;
 
-        switch (cit[i].pos) {
-            case pos_corner_right_top:
-                return (cit[i].x == cit[j].x && cit[i].y - offset_y == cit[j].y) ||
-                       (cit[i].x - offset_x == cit[j].x && cit[i].y == cit[j].y) ?
-                       sum_cost : 0;
-            case pos_corner_left_bottom:
-                return (cit[i].x == cit[j].x && cit[i].y + offset_y == cit[j].y) ||
-                       (cit[i].x + offset_x == cit[j].x && cit[i].y == cit[j].y) ?
-                       sum_cost : 0;
+        if(sig_x == 1)
+            if(cit[i].pos == pos_edge_right || cit[i].pos == pos_corner_right_top || cit[i].pos == pos_corner_right_bottom)
+                continue;
+        if(sig_x == -1)
+            if(cit[i].pos == pos_edge_left || cit[i].pos == pos_corner_left_top || cit[i].pos == pos_corner_left_bottom)
+                continue;
 
-            case pos_edge_left:
-                return ((cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y)) ||
-                        cit[i].x + offset_x == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
-            case pos_edge_top:
-                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
-                        cit[i].y + offset_y == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
-            case pos_edge_right:
-                return ((cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y)) ||
-                        cit[i].x - offset_x == cit[j].x && cit[i].y == cit[j].y) ? sum_cost : 0;
-            case pos_edge_bottom:
-                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
-                        cit[i].y + offset_y == cit[j].y && cit[i].x == cit[j].x) ? sum_cost : 0;
+        if(sig_y == 1)
+            if(cit[i].pos == pos_edge_bottom || cit[i].pos == pos_corner_right_bottom || cit[i].pos == pos_corner_left_bottom)
+                continue;
+        if(sig_y == -1)
+            if(cit[i].pos == pos_edge_top || cit[i].pos == pos_corner_left_top || cit[i].pos == pos_corner_right_top)
+                continue;
 
-            case pos_center:
-                return ((cit[i].y == cit[j].y && (cit[i].x + offset_x == cit[j].x || cit[i].x - offset_x == cit[j].x)) ||
-                        (cit[i].x == cit[j].x && (cit[i].y + offset_y == cit[j].y || cit[i].y - offset_y == cit[j].y))) ? sum_cost : 0;
-            default:
-                return 0;
+        if(sig_y == 1 && cit[i].pos == pos_edge_bottom) continue;
+
+        if( (i + (rest_x * sig_x) + (sig_y*offsetx*rest_y)) == j ){
+
+            cost_x  = block_a  = block_b = index = false;
+            for(a = 1; a <= rest_x; a++){
+
+                index = sig_x*a + i;
+                if(cit[index].pos == pos_edge_left) block_a = true;
+                if(cit[index].pos == pos_edge_right) block_b = true;
+
+                if(!cit[index].cost || cit[index].pos == pos_edge_left && block_b || cit[index].pos == pos_edge_right && block_a){
+                    cost_x = 0;
+                    break;
+                }
+
+                cost_x += cit[index].cost;
+            }
+            block_a = false;
+            block_b = false;
+            if(cost_x){
+                for(b = 1; b <= rest_y; b++){
+
+                    index += sig_y*offsetx;
+
+                    if(cit[index].pos == pos_edge_top) block_a = true;
+                    if(cit[index].pos == pos_edge_bottom) block_b = true;
+
+                    if(!cit[index].cost || cit[index].pos == pos_edge_top && block_b || cit[index].pos == pos_edge_bottom && block_a){
+                        cost_x = 0;
+                        break;
+                    }
+
+                    cost_x += cit[index].cost;
+                }
+            }
+
+            // cost y
+            block_a = block_b = cost_y = index = false;
+            for(a = 1; a <= rest_y; a++){
+
+                index = i+(sig_y*a*offsetx);
+                if(cit[index].pos == pos_edge_top) block_a = true;
+                if(cit[index].pos == pos_edge_bottom) block_b = true;
+
+                if(!cit[index].cost || cit[index].pos == pos_edge_top && block_b || cit[index].pos == pos_edge_bottom && block_a){
+                    cost_y = 0;
+                    break;
+                }
+
+                cost_y += cit[index].cost;
+            }
+            block_a = false;
+            block_b = false;
+
+            if(cost_y){
+                for(b = 1; b <= rest_x; b++) {
+
+                    index += sig_x;
+                    if(cit[index].pos == pos_edge_left) block_a = true;
+                    if(cit[index].pos == pos_edge_right) block_b = true;
+
+                    if(!cit[index].pos || cit[index].pos == pos_edge_top && block_b || cit[index].pos == pos_edge_bottom && block_a){
+                        cost_y = 0;
+                        break;
+                    }
+
+                    cost_y += cit[index].cost;
+                }
+            }
+            return !cost_x ? cost_y : !cost_y ? cost_x : (cost_x > cost_y) ? cost_y : cost_x;
         }
-    }else return 0;
+    }
+    return 0;
 }
 
 int main(int* argc, char* argv[]) {
@@ -132,7 +192,7 @@ int main(int* argc, char* argv[]) {
         for(j = 0; j < size_x; j++){
             cit[a].x = j;
             cit[a].y = i;
-            cit[a].pos = (i == 0 && j == 0) || (j == size_x && i == size_y) ? 0 : getPos(j, i, size_x, size_y);
+            cit[a].pos = (i == 0 && j == 0) || (j == size_x && i == size_y) ? 0 : getPos(j, i, size_x-1, size_y-1);
             fscanf( map, "%d", &cit[a].cost );
             if(cit[a].x == atoi(argv[2]) && cit[a].y == atoi(argv[3])) from = a;
             if(cit[a].x == atoi(argv[4]) && cit[a].y == atoi(argv[5])) to = a;
@@ -146,15 +206,35 @@ int main(int* argc, char* argv[]) {
 
     for(i = 0; i < size_adj_matrix; i++)
         for(j = 0; j < size_adj_matrix; j++){
-            adj_matrix[i][j] = adj_matrix[j][i] = i == j ? 0 : getAdjMatCost(cit, i, j, atoi(argv[7]), atoi(argv[6]));
+            adj_matrix[i][j] = adj_matrix[j][i] = i == j ? 0 : getAdjMatCost(cit, i, j, atoi(argv[6]), atoi(argv[7]), size_x);
         }
 
     for(i = 0; i < size_adj_matrix; i++) {
         for(j = 0; j < size_adj_matrix; j++)
             printf("%d\t",adj_matrix[i][j]);
-        printf("\n");
+        printf("\t %d \n", i);
     }
+    printf("\n");
+    for(i = 0; i < size_adj_matrix; i++) {
+        printf("%d\t",i);
+    }
+    printf("\n\n");
     dijkstra(adj_matrix, size_adj_matrix, from, to);
 
     return 0;
 }
+
+//     0 1 4 3 2 1
+
+/*
+
+ 0   1  2  3   4   5
+
+198    0   0  35  20   14   5
+|232|  0   0  14  21   13   11
+147    72 61  66  33   16   17
+87    78  81 141 |130| 40   23
+
+ *
+ *
+ * */
