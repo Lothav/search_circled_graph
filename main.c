@@ -1,6 +1,3 @@
-// A C / C++ program for Dijkstra's single source shortest path algorithm.
-// The program is for adjacency matrix representation of the graph
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -55,7 +52,7 @@ void dijkstra(int **graph, int n, int src, int to) {
         for (int v = 0; v < n; v++)
             if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX
                 && dist[u]+graph[u][v] < dist[v])
-                dist[v] = dist[u] + graph[u][v];
+                dist[v] = dist[u] + (graph[u][v] ==1 ? 0 : graph[u][v]);
     }
     printf("%d\n", dist[to] == INT_MAX ? -1 : dist[to]);
 }
@@ -119,7 +116,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                     cost_x = 0;
                     break;
                 }
-                cost_x += (cit[index].cost + cit[last_index].cost);
+                cost_x += (cit[index].cost == -1 ? 0 : cit[index].cost )+
+                          (cit[last_index].cost == -1 ? 0 : cit[last_index].cost );
                 last_index = index;
             }
 
@@ -132,7 +130,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                         cost_x = 0;
                         break;
                     }
-                    cost_x += (cit[index].cost + cit[last_index].cost);
+                    cost_x += (cit[index].cost == -1 ? 0 : cit[index].cost )+
+                            (cit[last_index].cost == -1 ? 0 : cit[last_index].cost );
                     last_index = index;
                 }
             }
@@ -148,7 +147,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                     cost_y = 0;
                     break;
                 }
-                cost_y += (cit[index].cost + cit[last_index].cost);
+                cost_y += (cit[index].cost == -1 ? 0 : cit[index].cost )+
+                          (cit[last_index].cost == -1 ? 0 : cit[last_index].cost );
                 last_index = index;
             }
             if(cost_y){
@@ -160,7 +160,8 @@ int getAdjMatCost(City *cit, int i, int j, int rest_x, int rest_y, int offsetx) 
                         cost_y = 0;
                         break;
                     }
-                    cost_y += (cit[index].cost + cit[last_index].cost);
+                    cost_y += (cit[index].cost == -1 ? 0 : cit[index].cost )+
+                              (cit[last_index].cost == -1 ? 0 : cit[last_index].cost );
                     last_index = index;
                 }
             }
